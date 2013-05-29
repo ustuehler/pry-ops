@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+libdir = File.expand_path('../../lib', __FILE__)
+exec "pry -I#{libdir} -rpry-ops"
