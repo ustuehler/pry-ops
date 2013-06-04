@@ -42,4 +42,35 @@ class PryOps::Service
   (Pry.config.ls.ceiling += self.included_modules.reject { |m|
     m.name.nil? or m.name =~ /^PryOps::/
   }).uniq!
+
+  # Autoload all user-defined service classes.
+  Dir.glob(File.expand_path '~/.pry-ops/service/*.rb').sort.each do |file|
+    const_name_candidates = File.read(file).lines.
+      grep(/^\s*(?:module|class)\s+([^\s]+)/) { |v|
+        $1.split('::').last
+      }
+
+    const_name = const_name_candidates.find { |name|
+      underscore_name = name.
+        gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+        gsub(/([a-z\d])([A-Z])/,'\1_\2').
+        tr("-", "_").
+        downcase
+
+      # A proc or lambda assigned to the "FooBar" const will be
+      # used as the autoload symbol if the file name is "foo_bar.rb"
+      # or "foobar.rb".
+      basename = File.basename(file, '.rb')
+      basename == underscore_name or basename == name.downcase
+    }
+
+    # Silently skip this file if no matching proc or lambda
+    # constant was found inside.
+    unless const_name
+      warn "WARNING: can't find matching constant in #{file}"
+      next
+    end
+
+    autoload const_name.to_sym, file.sub(/\.rb$/, '')
+  end
 end

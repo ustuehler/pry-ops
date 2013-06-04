@@ -6,9 +6,12 @@ module PryOps
   autoload_all_files_relative_to __FILE__
 end
 
-# Load all data models and call DataMapper.finalize.
 require 'pry-ops/environment'
-require 'pry-ops/service/github'
+
+# Trigger ``autoload'' definitions to load all service classes.
+PryOps::Service.constants.each { |sym| PryOps::Service.const_get sym }
+
+# Now that all data models should be loaded, call finalize.
 DataMapper.finalize
 
 # XXX: DataMapper requires a default repository
