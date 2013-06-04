@@ -5,5 +5,8 @@ class PryOps::Environment
 
   property :name, String, :key => true, :required => true
 
+  has n, :children, :model => 'PryOps::Environment', :child_key => [ :parent_name ]
+  belongs_to :parent, :model => 'PryOps::Environment', :child_key => [ :parent_name ]
+
   has n, :services
 end
