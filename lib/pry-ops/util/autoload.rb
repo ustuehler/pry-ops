@@ -1,4 +1,4 @@
-module PryOps
+class PryOps
   module Util
 
     # +Autoload+ is a module that generates +autoload+ statements
