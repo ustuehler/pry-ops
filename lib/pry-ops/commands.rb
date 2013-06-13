@@ -11,19 +11,28 @@ class PryOps
         @name = scope_name
       end
 
+      if scope_name.empty?
+        nesting_level = 0
+      else
+        nesting_level = 1 + scope_name.chars.count { |c| c == '.' }
+      end
+
+      # Define context children.
       PryOps.application.services.map { |s|
-        s.name.split('.')[0..-2].join('.')
+        context_name = s.name.split('.')[0...-1].join('.')
+        context_name.split('.')[0..nesting_level].join('.')
       }.uniq.select { |context_name|
-        parent_context = context_name.split('.')[0..-2].join('.')
+        parent_context = context_name.split('.')[0...nesting_level].join('.')
         context_name != scope_name and scope_name == parent_context
       }.each { |context_name|
         name = context_name.split('.').last
         define_singleton_method name, lambda { Binding.new context_name }
       }
 
+      # Define service children.
       PryOps.application.services.select { |s|
-        service_context = s.name.split('.')[0..-2].join('.')
-        scope_name == service_context
+        context_name = s.name.split('.')[0...-1].join('.')
+        scope_name == context_name
       }.each { |s|
         name = s.name.split('.').last
         define_singleton_method name, lambda { s }
