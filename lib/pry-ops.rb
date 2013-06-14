@@ -1,4 +1,4 @@
-require 'pry-ops/util/autoload'
+require 'pry-ops/util'
 
 # +PryOps+ is a +Pry+ plugin for DevOps people.
 class PryOps

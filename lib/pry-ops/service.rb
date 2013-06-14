@@ -35,6 +35,14 @@ class PryOps::Service
     attributes.each { |k, v| public_send("#{k}=", v) }
   end
 
+  def inspect
+    "#<#{self.class}:#{name.inspect}>"
+  end
+
+  def to_s
+    name
+  end
+
   class << self
 
     def service_class_by_type(type)
