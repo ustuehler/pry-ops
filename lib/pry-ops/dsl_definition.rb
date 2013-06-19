@@ -21,6 +21,7 @@ class PryOps
       @services = Hash.new
     end
 
+    # Return the list of all defined services.
     def services
       @services.values
     end
@@ -95,7 +96,7 @@ class PryOps
     #     service :jenkins, :url => "http://jenkins/"
     #   end
     #
-    def context(name, *args, &block)
+    def context(name, &block)
       name = name.to_s if name.is_a? Symbol
       name = name.to_str if name.respond_to? :to_str
       unless name.is_a? String
