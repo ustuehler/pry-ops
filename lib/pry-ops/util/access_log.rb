@@ -98,9 +98,10 @@ module PryOps::Util
       begin
         while line = input.readline
           line.chomp!
-          if line =~ /^([\d.]+|-) .* \[([^\]]+)\] "([^"]+)" (\d+)(?: (\d+))?(?: (\d+))? (\d+) "([^"]+)" "([^"]*)"/
+          if line =~ /^([\d.]+|-) .* \[([^\]]+)\] "((?:\\"|[^"])+)" (\d+)(?: (\d+))?(?: (\d+))? (\d+) "([^"]+)" "([^"]*)"/
             # LogFormat "%{X-mobile-source-IP}i via %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" debug_combined
             # - via 127.0.0.1 - - [15/May/2013:00:00:01 +0200] "GET /jkmanager?mime=txt HTTP/1.0" 200 26841 "-" "Wget/1.12 (linux-gnu)"
+            # - via 10.38.252.251 - - [17/Jun/2013:00:28:01 +0200] "~\x81\x10\xb8\xa8\xa2\x9fd3x\x94\x12\"2\xedW\xe1d\xact\xfdB&\"\xe8\xb0!\xed\xfc\xe9M\x92\xf1\xf3\x97or\rzP}FN^\x18'\xad\x0c\x8a\xc9T\x82)\xb64\x04\xaa\xa8\xa9X\xb3V\x9a\x87\xa7G\xc7}O^~\"\xc3" 400 88 205 679 "-" "-"
             entry = Entry.new
             entry.source_ip = $1
             entry.request = $3
