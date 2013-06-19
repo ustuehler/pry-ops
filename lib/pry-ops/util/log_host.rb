@@ -29,6 +29,41 @@ module PryOps::Util::LogHost
     `#{command}`.split("\n")
   end
 
+  # This class builds a "tail" command line based on the options
+  # given to the constructor.
+  #
+  # @example Produce a command to show the last 30 lines of a file.
+  #   TailCommand.new :last => 30
+  class TailCommand
+
+    attr_accessor :discard_stderr
+    attr_accessor :follow
+    attr_accessor :last
+    attr_accessor :quiet
+
+    # Initialize a tail(1) command line for the Bourne Shell.
+    def initialize(glob_patterns, options = {})
+      @glob_patterns = glob_patterns
+
+      @discard_stderr = true
+      @follow = true
+      @quiet = false
+
+      options.each { |k, v| public_send("#{k}=", v) }
+    end
+
+    # Return a shell command which calls tail(1) on the files that
+    # match the glob patterns and with command line options according
+    # to the options passed to #initialize.
+    def to_s
+      "tail #{@follow ? '-F' : ''} -n #{@last || 0} " +
+        (@quiet ? '-q ' : '') +
+        @glob_patterns.join(' ') +
+        (@discard_stderr ? ' 2>/dev/null' : '')
+    end
+
+  end
+
   # Yield an +IO+ object to the given block from which it can read
   # log output from JIRA, line by line.
   #
@@ -38,19 +73,30 @@ module PryOps::Util::LogHost
   #       puts line if line =~ / (ERROR|FATAL|CRITICAL|NOTICE): /i
   #     end
   #   end
-  def log_tail(&block)
+  def log_tail(options = {}, &block)
     raise "no log host specified for #{self}" unless log_host
     raise "no log file patterns specified for #{self}" unless log_file_patterns
 
-    redirect_stderr = $DEBUG ? '' : '2>/dev/null'
-    command = "ssh -oClearAllForwardings=yes '#{host}' 'sudo sh -c \"tail -n -0 -F #{log_file_patterns.join ' '} #{redirect_stderr}\"' #{redirect_stderr}"
+    unless options.has_key? :discard_stderr
+      options[:discard_stderr] = !$DEBUG
+    end
+
+    tail_command = TailCommand.new log_file_patterns, options
+
+    command = "ssh -oClearAllForwardings=yes '#{host}' " +
+      "'sudo sh -c \"#{tail_command}\"'" +
+      (options[:discard_stderr] ? ' 2>/dev/null' : '')
 
     IO.popen(command) do |pipe|
       if block_given?
         yield pipe
       else
-        while line = pipe.readline
-          puts line
+        begin
+          while line = pipe.readline
+            puts line
+          end
+        rescue EOFError
+          # ignore
         end
       end
     end
